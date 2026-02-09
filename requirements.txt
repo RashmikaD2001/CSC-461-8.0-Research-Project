@@ -1,0 +1,8 @@
+numpy=1.26.4
+pandas=2.3.0
+matplotlib=3.10.6
+seaborn=0.13.2
+lifelines=0.30
+scikit-survival=0.26
+statsmodels=0.14.6
+
