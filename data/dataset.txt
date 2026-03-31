@@ -3,3 +3,5 @@ https://www.kaggle.com/datasets/utkarshx27/breast-cancer-dataset-used-royston-an
 https://www.kaggle.com/datasets/gilsousa/habermans-survival-data-set
 
 https://www.kaggle.com/datasets/dmbmudissanayake/survival-analysis-simulation-dataset
+
+https://www.kaggle.com/datasets/jixing475/mayo-clinic-primary-biliary-cirrhosis-data
