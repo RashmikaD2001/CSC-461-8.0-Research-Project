@@ -57,7 +57,7 @@ FIX 9  (Moderate / methodological)
     reported IBS is never silently interpreted as a test-set estimate.
 
 FIX 10 (Trivial / naming)
-    Warm-start constant renamed  SQ → SQRT  (index 10 = power 0.5).
+    Warm-start constant renamed  SQ = SQRT  (index 10 = power 0.5).
 """
 
 import numpy as np
@@ -366,8 +366,8 @@ class FPCoxOptimizer:
         self._n_events = int(self.df[self.event_col].sum())
 
         # Precompute all 16 power transforms for each covariate once
-        self._precomp = {}      # (col, power) → np.ndarray
-        self._log_x   = {}      # col → np.log(x)
+        self._precomp = {}      # (col, power) = np.ndarray
+        self._log_x   = {}      # col = np.log(x)
         for col in covariates:
             x     = self.df[col].values.astype(float)
             log_x = np.log(x)
@@ -404,7 +404,7 @@ class FPCoxOptimizer:
     def _preprocess_positive(df, features, scales=None):
         """
         For each feature:
-          1. Shift so all values are strictly positive (min → 1e-5).
+          1. Shift so all values are strictly positive (min = 1e-5).
           2. Scale by the nearest power-of-10 to the mean absolute value
              (Royston & Sauerbrei §2.3) to keep transformed values in a
              numerically comfortable range.
@@ -559,7 +559,7 @@ class FPCoxOptimizer:
     def _warm_start_pop(self, pop_size, rng):
         dim  = 2 * len(self.covariates)
         pop  = rng.integers(0, self.N_POWERS, size=(pop_size, dim))
-        NA, LIN, SQRT, LG, Q = 0, 11, 10, 8, 13  # FIX 10: SQ → SQRT
+        NA, LIN, SQRT, LG, Q = 0, 11, 10, 8, 13  # FIX 10: SQ = SQRT
         seeds = [
             np.tile([LIN,  NA],   len(self.covariates)),  # FP1 linear
             np.tile([SQRT, NA],   len(self.covariates)),  # FP1 sqrt

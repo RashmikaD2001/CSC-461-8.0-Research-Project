@@ -1,27 +1,27 @@
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
 #  FP-Cox Optimizer — Self-adaptive Differential Evolution (SaDE)
 #  v2 — Bug Fixes + Optimisations
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
 #
 #  BUG FIXES (vs v1):
-#  ──────────────────
+#  ==================
 #  FIX 1 │ generate_fp_features — repeated-power detection was wrong
 #         │   OLD: `if idx==1 and p==p1`
 #         │        Triggered when the 2nd sorted power accidentally equalled p1
 #         │        even for DISTINCT powers.
-#         │        Example: powers=(2, 1) → sorted=[1, 2]
-#         │        idx=1 → p=2, p==p1 (2==2) → True → incorrectly applies log!
+#         │        Example: powers=(2, 1) = sorted=[1, 2]
+#         │        idx=1 = p=2, p==p1 (2==2) = True = incorrectly applies log!
 #         │   FIX: sort active powers first, then `if pa == pb` (explicit check)
 #
 #  FIX 2 │ BIC denominator used n_events instead of n
-#         │   OLD: `n_events = max(df[event_col].sum(), 2)` → log(n_events)
-#         │        n_events < n → log(n_events) < log(n) → weaker penalty
-#         │        → biased toward overly complex models
+#         │   OLD: `n_events = max(df[event_col].sum(), 2)` = log(n_events)
+#         │        n_events < n = log(n_events) < log(n) = weaker penalty
+#         │        = biased toward overly complex models
 #         │   FIX: `n = len(df)` — standard BIC definition
 #
 #  FIX 3 │ Cache key did not account for swapped indices
 #         │   OLD: (3, 11) and (11, 3) stored as two separate evaluations
-#         │        but represent the same FP2(−2, 1) model → wasted evals
+#         │        but represent the same FP2(−2, 1) model = wasted evals
 #         │   FIX: canonical_key() sorts each (p1_idx, p2_idx) pair before caching
 #
 #  FIX 4 │ No NaN / Inf guard after FP transformation
@@ -30,10 +30,10 @@
 #         │   FIX: np.isfinite() check before fitting
 #
 #  OPTIMISATION IMPROVEMENTS:
-#  ───────────────────────────
+#  ===========================
 #  IMP 5 │ Combined objective: BIC − γ·n·concordance_index
-#         │   gamma=0  → pure BIC (backward-compatible default)
-#         │   gamma>0  → rewards predictive accuracy; multiplying by n keeps
+#         │   gamma=0  = pure BIC (backward-compatible default)
+#         │   gamma>0  = rewards predictive accuracy; multiplying by n keeps
 #         │              BIC and c-index on the same scale
 #
 #  IMP 6 │ Warm-start population
@@ -43,12 +43,12 @@
 #  IMP 7 │ init_pop parameter added to _SaDE.run()
 #         │   Allows external warm-start arrays to be injected
 #
-#  IMP 8 │ Strategy probability floor raised 0.01 → 0.05
+#  IMP 8 │ Strategy probability floor raised 0.01 = 0.05
 #         │   Faster recovery when a strategy gets unlucky early on
 #
 #  IMP 9 │ seed exposed as parameter to optimize()
 #         │   Was hard-coded to 42 in v1; now user-controllable
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
 
 import numpy as np
 import pandas as pd
@@ -61,15 +61,15 @@ from typing import List, Optional
 
 warnings.filterwarnings("ignore")
 
-# ── Power set (index 0 = excluded / None) ────────────────────────────────────
+# == Power set (index 0 = excluded / None) ====================================
 POWER_SET = [None, -3, -2.5, -2, -1.5, -1, -0.5, -0.25,
               0, 0.25, 0.5, 1, 1.5, 2, 2.5, 3]
 N_POWERS  = len(POWER_SET)   # 16, valid indices: 0..15
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
 #  SaDE engine  (IMP 7: init_pop added; IMP 8: strategy floor raised)
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
 
 @dataclass
 class _SaDEResult:
@@ -190,7 +190,7 @@ class _SaDE:
             r = np.where(ns + nf > 0, ns / (ns + nf), 0.0)
         tot = r.sum()
         if tot > 0:
-            # IMP 8: floor raised 0.01 → 0.05 for faster strategy recovery
+            # IMP 8: floor raised 0.01 = 0.05 for faster strategy recovery
             self.p = 0.05 + 0.95 * r / tot
             self.p /= self.p.sum()
         for k in range(_NS):
@@ -204,9 +204,9 @@ class _SaDE:
             while len(self.crok[k]) > self.lp: self.crok[k].popleft()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
 #  FPCoxOptimizer  v2
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
 
 class FPCoxOptimizer:
     """
@@ -224,11 +224,11 @@ class FPCoxOptimizer:
 
                    objective = BIC  −  gamma × n × concordance_index
 
-                   gamma = 0   →  pure BIC minimisation (v1 behaviour)
-                   gamma = 1   →  good starting point; balances BIC and
+                   gamma = 0   =  pure BIC minimisation (v1 behaviour)
+                   gamma = 1   =  good starting point; balances BIC and
                                   c-index (multiply by n keeps both terms
                                   on the same numerical scale)
-                   gamma > 1   →  increasingly prioritises c-index over
+                   gamma > 1   =  increasingly prioritises c-index over
                                   parsimony; may overfit on small datasets
     """
 
@@ -254,7 +254,7 @@ class FPCoxOptimizer:
         self.final_fp_model     = None
         self.traditional_model  = None
 
-    # ── Preprocessing ─────────────────────────────────────────────────────────
+    # == Preprocessing =========================================================
     @staticmethod
     def _preprocess_positive(df, features):
         """Shift features to be strictly positive (required for log/power)."""
@@ -264,7 +264,7 @@ class FPCoxOptimizer:
             df[col] = x - x.min() + 1e-5 if (x <= 0).any() else x
         return df
 
-    # ── FIX 3: canonical cache key ────────────────────────────────────────────
+    # == FIX 3: canonical cache key ============================================
     @staticmethod
     def _canonical_key(indices):
         """
@@ -273,9 +273,9 @@ class FPCoxOptimizer:
 
         POWER_SET is monotone on non-None values, so sorting indices
         is equivalent to sorting power values:
-          (11, 3)  →  (3, 11)   [same FP2(−2, 1) model]
-          (11, 0)  →  (0, 11)   [same FP1(linear) model]
-          ( 0, 0)  →  (0, 0)    [excluded — unchanged]
+          (11, 3)  =  (3, 11)   [same FP2(−2, 1) model]
+          (11, 0)  =  (0, 11)   [same FP1(linear) model]
+          ( 0, 0)  =  (0, 0)    [excluded — unchanged]
         """
         key = list(indices)
         for i in range(0, len(key), 2):
@@ -286,21 +286,21 @@ class FPCoxOptimizer:
                 key[i], key[i+1] = min(a, b), max(a, b)
         return tuple(key)
 
-    # ── FIX 1: generate_fp_features (repeated-power bug fixed) ───────────────
+    # == FIX 1: generate_fp_features (repeated-power bug fixed) ===============
     def _generate_fp_features(self, df, features, powers):
         """
         Apply FP transforms to all covariates.
 
         Convention:
-          (None, None) → variable excluded
-          (p,   None)  → FP1: x^p          (ln x when p == 0)
-          (p1,  p2)    → FP2: x^p1, x^p2
+          (None, None) = variable excluded
+          (p,   None)  = FP1: x^p          (ln x when p == 0)
+          (p1,  p2)    = FP2: x^p1, x^p2
                          repeated (p1==p2): second term = x^p · ln x
 
         FIX 1: old code used `if idx==1 and p==p1` to detect repeated powers.
         This incorrectly triggered on DISTINCT powers when p2 happened to equal
-        p1 numerically after sorting (e.g. powers=(2,1) → sorted=[1,2],
-        idx=1 gives p=2, p==p1=2 → True → log term applied to non-repeated FP).
+        p1 numerically after sorting (e.g. powers=(2,1) = sorted=[1,2],
+        idx=1 gives p=2, p==p1=2 = True = log term applied to non-repeated FP).
         Fixed by comparing the two sorted active powers directly: `if pa == pb`.
         """
         transformed = {}
@@ -329,14 +329,14 @@ class FPCoxOptimizer:
 
         return pd.DataFrame(transformed, index=df.index)
 
-    # ── FIX 2 + IMP 5: objective with correct BIC and optional c-index ────────
+    # == FIX 2 + IMP 5: objective with correct BIC and optional c-index ========
     def _objective_function(self, x):
         """
         x : integer array of power indices (already integers from SaDE).
 
         FIX 2 — BIC now uses total n, not n_events.
-          n_events < n  →  log(n_events) < log(n)  →  weaker complexity penalty
-          →  v1 was biased toward selecting more parameters than warranted.
+          n_events < n  =  log(n_events) < log(n)  =  weaker complexity penalty
+          =  v1 was biased toward selecting more parameters than warranted.
           Standard BIC definition: -2·logL + k·ln(n)  where n = total rows.
 
         IMP 5 — Combined objective (when gamma > 0):
@@ -391,16 +391,16 @@ class FPCoxOptimizer:
             self.best_val = val
         return val
 
-    # ── IMP 6: warm-start population ──────────────────────────────────────────
+    # == IMP 6: warm-start population ==========================================
     def _warm_start_pop(self, pop_size: int, rng: np.random.Generator) -> np.ndarray:
         """
         Seed generation 0 with sensible starting models so SaDE does not
         waste early evaluations on obviously bad solutions.
 
         Seeded rows (up to pop_size):
-          0 : all FP1 linear       index 11 → power  1
-          1 : all FP1 sqrt         index 10 → power  0.5
-          2 : all FP1 log          index  8 → power  0  (= ln x)
+          0 : all FP1 linear       index 11 = power  1
+          1 : all FP1 sqrt         index 10 = power  0.5
+          2 : all FP1 log          index  8 = power  0  (= ln x)
           3 : all FP2(1, 0.5)      most common FP2 in clinical literature
           4 : all FP2(1, 2)        another common FP2
         Remaining rows: random.
@@ -420,11 +420,11 @@ class FPCoxOptimizer:
             pop[row] = seed
         return pop
 
-    # ── SaDE generation callback ──────────────────────────────────────────────
+    # == SaDE generation callback ==============================================
     def _callback(self, best_x, best_f, gen):
         self.history.append(self.best_val)
 
-    # ── Main optimisation ─────────────────────────────────────────────────────
+    # == Main optimisation =====================================================
     def optimize(self, maxiter=50, popsize=15, seed=42):
         """
         Run SaDE to select optimal FP powers.
@@ -479,7 +479,7 @@ class FPCoxOptimizer:
         self._plot_convergence()
         self._fit_final_models()
 
-    # ── Convergence plot ──────────────────────────────────────────────────────
+    # == Convergence plot ======================================================
     def _plot_convergence(self):
         plt.figure(figsize=(10, 6))
         plt.plot(range(1, len(self.history)+1), self.history,
@@ -493,7 +493,7 @@ class FPCoxOptimizer:
         plt.tight_layout()
         plt.show()
 
-    # ── Final model fit & comparison ──────────────────────────────────────────
+    # == Final model fit & comparison ==========================================
     def _fit_final_models(self):
         """Fit and compare FP Cox model vs traditional (linear) Cox model."""
         print("\n" + "="*65)
@@ -541,9 +541,9 @@ class FPCoxOptimizer:
         print(f"{'Parameters (k)':<25} | {k_t:>{W}d} | {k_fp:>{W}d}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
 #  Usage example
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
 #
 #  # Pure BIC optimisation (gamma=0 — backward-compatible with v1)
 #  opt = FPCoxOptimizer(df=my_df, covariates=['age','bmi','bp'],
@@ -559,4 +559,4 @@ class FPCoxOptimizer:
 #  # Access results after optimisation
 #  print(opt.best_powers)             # selected (p1, p2) per covariate
 #  opt.final_fp_model.print_summary() # lifelines summary of the FP Cox fit
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
