@@ -1,6 +1,6 @@
 ### Optimizing Nonlinear Hazard Models in Survival Analysis Using Nature Inspired Algorithms
 
-"modelling non-linear covariate effects in Cox proportional hazards models using Self-Adaptive Differential Evolution with Fractional-polynomial"
+"Optimizing modelling non-linear covariate effects in Cox proportional hazards models using Self-Adaptive Differential Evolution with Fractional-polynomial"
 
 ## Installation
 
