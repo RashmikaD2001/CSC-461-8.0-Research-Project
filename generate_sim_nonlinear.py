@@ -1,31 +1,21 @@
 """
-Controlled survival simulation - Scenario B: NON-LINEAR Age effect.
-
-The "different simulated example": same structure as Scenario A and the original
-Kaggle dataset (single covariate Age, columns Age, Time, Event) but with a
-genuinely non-linear, fractional-polynomial Age effect, so recovery of
-non-linearity can be checked against a KNOWN truth.
-
-Data-generating process (Cox PH, Weibull baseline; Bender, Augustin & Blettner,
-Stat. Med. 2005):
-
-    Age_i  ~ TruncNormal(mu=58, sd=12) on [25, 90]   # identical Age vector to Scenario A
+    Age_i  ~ TruncNormal(mu=58, sd=12) on [25, 90]
     h(t|Age) = h0(t) * exp(eta(Age)),   h0(t) = lambda * nu * t^(nu-1)
     eta(Age) = beta * (Age / 58)^(-2)                # FP1 -> true power = -2
     T_i      = ( -log(U_i) / (lambda * exp(eta_i)) )^(1/nu),  U_i ~ Uniform(0,1)
     C_i      ~ Exponential(rate calibrated to TARGET_CENS)   # independent censoring
     Time_i   = min(T_i, C_i),   Event_i = 1{T_i <= C_i}
 
-The effect is deliberately strong so the true power is the clearly isolated global
-pBIC optimum at this sample size (SaDE recovers (-2, None) at maxiter=1500,
-seed=42). eta is mean-centred so the baseline matches Scenario A.
+The effect is monotonically decreasing in Age with a realistic magnitude (hazard
+ratio ~3.9 across the Age inter-quartile range), yet strong enough that the true
+power -2 is the modal selection at this sample size
 """
 import numpy as np
 import pandas as pd
 from pathlib import Path
 
 # ----- config -----------------------------------------------------------
-OUTPUT_DIR  = Path('data/preprocess-data')
+OUTPUT_DIR  = Path('data/preprocess-data')   # same dir as the other datasets
 OUTPUT_FILE = 'preprocess_sim_nonlinear.csv'
 N           = 200
 SEED_AGE    = 11        # shared with generate_sim_linear.py -> identical Age vector
@@ -33,7 +23,7 @@ SEED_SURV   = 202
 WEIB_SHAPE  = 1.4       # nu (same baseline as Scenario A)
 WEIB_SCALE  = 0.03      # lambda
 TRUE_POWER  = -2        # FP1 power on (Age / 58)
-BETA        = 7.0       # strong effect so (-2, None) is the modal pBIC optimum at n=200
+BETA        = 2.5       # realistic effect (HR ~3.9 across Age IQR); modal recovery = (-2, None)
 TARGET_CENS = 0.30
 
 
