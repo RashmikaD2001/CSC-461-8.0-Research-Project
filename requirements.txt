@@ -3,7 +3,7 @@ pandas==2.3.3
 matplotlib==3.10.6
 seaborn==0.13.2
 lifelines==0.30.3
-scikit-survival==0.26
+scikit-survival==0.27.0
 statsmodels==0.14.6
 scipy==1.16.3
 joblib==1.5.3
